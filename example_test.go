@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/google/gousb"
+	"github.com/zdypro888/gousb"
 )
 
 // This examples demonstrates the use of a few convenience functions that

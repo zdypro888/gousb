@@ -53,7 +53,7 @@ func (c ConfigDesc) intfDesc(num, alt int) (*InterfaceSetting, error) {
 	// In an ideal world, interfaces in the descriptor would be numbered
 	// contiguously starting from 0, as required by the specification. In the
 	// real world however the specification is sometimes ignored:
-	// https://github.com/google/gousb/issues/65
+	// https://github.com/zdypro888/gousb/issues/65
 	ifs := make([]int, len(c.Interfaces))
 	for i := range c.Interfaces {
 		ifs[i] = c.Interfaces[i].Number

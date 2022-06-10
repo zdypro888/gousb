@@ -286,6 +286,12 @@ func (f *fakeLibusb) empty() bool {
 	return len(f.submitted) == 0
 }
 
+// empty can be used to confirm that all transfers were cleaned up.
+func (f *fakeLibusb) registerHotplugCallback(ctx *libusbContext, events HotplugEventType, enumerate bool, vendorID int32, productID int32, devClass int32, fn libusbHotplugCallback) (func(), error) {
+	// We must allocate memory to pass to C, since we can't pass a go pointer.
+	return nil, errors.New("not supported")
+}
+
 func newFakeLibusb() *fakeLibusb {
 	fl := &fakeLibusb{
 		fakeDevices: make(map[*libusbDevice]*fakeDevice),

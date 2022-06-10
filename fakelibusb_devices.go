@@ -162,7 +162,7 @@ var fakeDevices = []fakeDevice{
 					// Malformed descriptior, non contiguous interface
 					// number (previous interface is #1), alt settings
 					// not starting from 0.
-					// See https://github.com/google/gousb/issues/65
+					// See https://github.com/zdypro888/gousb/issues/65
 					Number: 3,
 					AltSettings: []InterfaceSetting{{
 						Number:     3,
@@ -184,7 +184,7 @@ var fakeDevices = []fakeDevice{
 			6: "Boring setting",
 			7: "Fast streaming",
 			8: "Slower streaming",
-			9: "Interface for https://github.com/google/gousb/issues/65",
+			9: "Interface for https://github.com/zdypro888/gousb/issues/65",
 		},
 	},
 	// Bus 001 Device 003: ID 9999:0002

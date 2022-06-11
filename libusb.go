@@ -161,6 +161,7 @@ type libusbIntf interface {
 	close(*libusbDevHandle)
 	reset(*libusbDevHandle) error
 	control(*libusbDevHandle, time.Duration, uint8, uint8, uint16, uint16, []byte) (int, error)
+	bulk(d *libusbDevHandle, address EndpointAddress, data []byte, timeout time.Duration) (int, error)
 	getConfig(*libusbDevHandle) (uint8, error)
 	setConfig(*libusbDevHandle, uint8) error
 	getStringDesc(*libusbDevHandle, int) (string, error)
@@ -394,6 +395,21 @@ func (libusbImpl) control(d *libusbDevHandle, timeout time.Duration, rType, requ
 		return int(n), fromErrNo(n)
 	}
 	return int(n), nil
+}
+
+func (libusbImpl) bulk(d *libusbDevHandle, address EndpointAddress, data []byte, timeout time.Duration) (int, error) {
+	dataSlice := (*reflect.SliceHeader)(unsafe.Pointer(&data))
+	var cnt C.int
+	if errno := C.libusb_bulk_transfer(
+		(*C.libusb_device_handle)(d),
+		C.uint8_t(address),
+		(*C.uchar)(unsafe.Pointer(dataSlice.Data)),
+		C.int(len(data)),
+		&cnt,
+		C.uint(timeout/time.Millisecond)); errno < 0 {
+		return 0, fromErrNo(errno)
+	}
+	return int(cnt), nil
 }
 
 func (libusbImpl) getConfig(d *libusbDevHandle) (uint8, error) {

@@ -144,6 +144,9 @@ func (f *fakeLibusb) reset(*libusbDevHandle) error { return nil }
 func (f *fakeLibusb) control(*libusbDevHandle, time.Duration, uint8, uint8, uint16, uint16, []byte) (int, error) {
 	return 0, errors.New("not implemented")
 }
+func (f *fakeLibusb) bulk(d *libusbDevHandle, address EndpointAddress, data []byte, timeout time.Duration) (int, error) {
+	return 0, errors.New("not implemented")
+}
 func (f *fakeLibusb) getConfig(*libusbDevHandle) (uint8, error) { return 1, nil }
 func (f *fakeLibusb) setConfig(d *libusbDevHandle, cfg uint8) error {
 	debug.Printf("setConfig(%p, %d)\n", d, cfg)

@@ -174,8 +174,5 @@ func (e *OutEndpoint) BulkWrite(data []byte, timeout time.Duration) (int, error)
 	if len(data) == 0 {
 		return 0, nil
 	}
-	if _, err := e.ctx.libusb.control(e.h, timeout, 0x21, 1, 0, 0, nil); err != nil {
-		return 0, err
-	}
 	return e.ctx.libusb.bulk(e.h, e.Desc.Address, data, timeout)
 }

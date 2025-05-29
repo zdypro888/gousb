@@ -16,7 +16,7 @@
 /*
 Package gousb provides an low-level interface to attached USB devices.
 
-A Short Tutorial
+# A Short Tutorial
 
 A Context manages all resources necessary for communicating with USB
 devices.
@@ -117,11 +117,10 @@ standard for control commands though, and many devices implement their custom co
 
 Control commands can be issued through Device.Control().
 
-See Also
+# See Also
 
 For more information about USB protocol and handling USB devices,
 see the excellent "USB in a nutshell" guide: http://www.beyondlogic.org/usbnutshell/
-
 */
 package gousb
 
@@ -164,9 +163,36 @@ func newContextWithImpl(impl libusbIntf) *Context {
 	return ctx
 }
 
-// NewContext returns a new Context instance.
+// NewContext returns a new Context instance with default ContextOptions.
 func NewContext() *Context {
-	return newContextWithImpl(libusbImpl{})
+	return ContextOptions{}.New()
+}
+
+// DeviceDiscovery controls USB device discovery.
+type DeviceDiscovery int
+
+const (
+	// EnableDeviceDiscovery means the connected USB devices will be enumerated
+	// on Context initialization. This enables the use of OpenDevices and
+	// OpenWithVIDPID. This is the default.
+	EnableDeviceDiscovery = iota
+	// DisableDeviceDiscovery means the USB devices are not enumerated and
+	// OpenDevices will not return any devices.
+	// Without device discovery, OpenDeviceWithFileDescriptor can be used
+	// to open devices.
+	DisableDeviceDiscovery
+)
+
+// ContextOptions holds parameters for Context initialization.
+type ContextOptions struct {
+	DeviceDiscovery DeviceDiscovery
+}
+
+// New creates a Context, taking into account the optional flags contained in ContextOptions
+func (o ContextOptions) New() *Context {
+	return newContextWithImpl(libusbImpl{
+		discovery: o.DeviceDiscovery,
+	})
 }
 
 // OpenDevices calls opener with each enumerated device.
@@ -209,6 +235,41 @@ func (c *Context) OpenDevices(opener func(desc *DeviceDesc) bool) ([]*Device, er
 
 	}
 	return ret, reterr
+}
+
+// OpenDeviceWithFileDescriptor takes a (Unix) file descriptor of an opened USB
+// device and wraps the library around it.
+// This is particularly useful when working on Android, where the USB device can be
+// opened by the SDK (Java), giving access to the device through the file descriptor
+// (https://developer.android.com/reference/android/hardware/usb/UsbDeviceConnection#getFileDescriptor()).
+//
+// Do note that for this to work the automatic device discovery must be disabled
+// at the time when the new Context is created, through the use of
+// ContextOptions.DeviceDiscovery.
+//
+// Example:
+//
+//	ctx := ContextOptions{DeviceDiscovery: DisableDeviceDiscovery}.New()
+//	device, err := ctx.OpenDeviceWithFileDescriptor(fd)
+//
+// An error is returned in case the file descriptor is not valid.
+func (c *Context) OpenDeviceWithFileDescriptor(fd uintptr) (*Device, error) {
+	handle, err := c.libusb.wrapSysDevice(c.ctx, fd)
+	if err != nil {
+		return nil, err
+	}
+	dev := c.libusb.getDevice(handle)
+	desc, err := c.libusb.getDeviceDesc(dev)
+	if err != nil {
+		return nil, fmt.Errorf("device was opened, but getting device descriptor failed: %v", err)
+	}
+
+	o := &Device{handle: handle, ctx: c, Desc: desc}
+	c.mu.Lock()
+	c.devices[o] = true
+	c.mu.Unlock()
+
+	return o, nil
 }
 
 // OpenDeviceWithVIDPID opens Device from specific VendorId and ProductId.

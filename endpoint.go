@@ -148,6 +148,13 @@ func (e *InEndpoint) ReadContext(ctx context.Context, buf []byte) (int, error) {
 	return e.transfer(ctx, buf)
 }
 
+func (e *InEndpoint) BulkRead(data []byte, timeout time.Duration) (int, error) {
+	if len(data) == 0 {
+		return 0, nil
+	}
+	return e.ctx.libusb.bulk(e.h, e.Desc.Address, data, timeout)
+}
+
 // OutEndpoint represents an OUT endpoint open for transfer.
 type OutEndpoint struct {
 	*endpoint

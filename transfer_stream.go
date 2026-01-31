@@ -286,7 +286,6 @@ func (w *WriteStream) CloseContext(ctx context.Context) error {
 	for t := range w.s.transfers {
 		n, err := t.wait(ctx)
 		w.total += n
-		t.free()
 		if err != nil {
 			w.s.gotError(err)
 			w.s.flushRemaining()

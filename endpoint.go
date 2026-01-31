@@ -148,6 +148,10 @@ func (e *InEndpoint) ReadContext(ctx context.Context, buf []byte) (int, error) {
 	return e.transfer(ctx, buf)
 }
 
+// BulkRead performs a synchronous bulk read from the endpoint with a specified timeout.
+// Unlike Read/ReadContext which use asynchronous transfers, BulkRead uses libusb's
+// synchronous bulk transfer API and blocks until the transfer completes or times out.
+// Returns the number of bytes read and any error encountered.
 func (e *InEndpoint) BulkRead(data []byte, timeout time.Duration) (int, error) {
 	if len(data) == 0 {
 		return 0, nil
@@ -177,6 +181,10 @@ func (e *OutEndpoint) WriteContext(ctx context.Context, buf []byte) (int, error)
 	return e.transfer(ctx, buf)
 }
 
+// BulkWrite performs a synchronous bulk write to the endpoint with a specified timeout.
+// Unlike Write/WriteContext which use asynchronous transfers, BulkWrite uses libusb's
+// synchronous bulk transfer API and blocks until the transfer completes or times out.
+// Returns the number of bytes written and any error encountered.
 func (e *OutEndpoint) BulkWrite(data []byte, timeout time.Duration) (int, error) {
 	if len(data) == 0 {
 		return 0, nil

@@ -59,7 +59,7 @@ func (c *Context) RegisterHotplug(fn func(HotplugEvent)) (func(), error) {
 		dereg()
 		return nil, err
 	}
-	for _, dev := range list {
+	for i, dev := range list {
 		desc, err := c.libusb.getDeviceDesc(dev)
 		e := &hotplugEvent{
 			eventType:  HotplugEventDeviceArrived,
@@ -70,9 +70,14 @@ func (c *Context) RegisterHotplug(fn func(HotplugEvent)) (func(), error) {
 			enumerated: true,
 		}
 		fn(e)
+		c.libusb.dereference(dev)
 		if e.deregister {
+			// dereference remaining devices before returning
+			for j := i + 1; j < len(list); j++ {
+				c.libusb.dereference(list[j])
+			}
 			dereg()
-			break
+			return dereg, nil
 		}
 	}
 	return dereg, nil
@@ -112,7 +117,11 @@ func (e *hotplugEvent) Open() (*Device, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Device{handle: handle, ctx: e.ctx, Desc: e.desc}, nil
+	o := &Device{handle: handle, ctx: e.ctx, Desc: e.desc}
+	e.ctx.mu.Lock()
+	e.ctx.devices[o] = true
+	e.ctx.mu.Unlock()
+	return o, nil
 }
 
 // Deregister deregisters the callback registration after the callback function returns.
